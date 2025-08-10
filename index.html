@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Module 8 Quiz: Dialogue</title>
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Using a common font for better aesthetics */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        /* Custom styles for the quiz options to provide clear feedback */
+        .option.selected {
+            background-color: #3b82f6; /* blue-500 */
+            color: white;
+            border-color: #2563eb; /* blue-600 */
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        .option.correct {
+            background-color: #16a34a; /* green-600 */
+            color: white;
+            border-color: #15803d; /* green-700 */
+        }
+        .option.incorrect {
+            background-color: #dc2626; /* red-600 */
+            color: white;
+            border-color: #b91c1c; /* red-700 */
+        }
+        .option:not(.disabled):hover {
+            background-color: #f3f4f6; /* gray-100 */
+            border-color: #9ca3af; /* gray-400 */
+        }
+        .option.disabled {
+            cursor: not-allowed;
+            opacity: 0.8;
+        }
+        /* A subtle transition for a smoother experience */
+        .option {
+            transition: all 0.2s ease-in-out;
+        }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800 flex items-center justify-center min-h-screen py-12 px-4">
+
+    <div id="quiz-container" class="bg-white w-full max-w-2xl mx-auto p-6 sm:p-8 rounded-xl shadow-lg">
+        <h1 class="text-3xl font-bold text-center mb-2">Module 8 Quiz</h1>
+        <h2 class="text-xl font-semibold text-center text-slate-600 mb-8">Dialogue</h2>
+        
+        <div id="quiz-content" class="space-y-8">
+            <!-- Questions will be dynamically inserted here by JavaScript -->
+        </div>
+
+        <button id="submit-btn" class="w-full bg-blue-600 text-white font-bold py-3 px-6 rounded-lg mt-10 hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 transition duration-300 ease-in-out text-lg shadow-md hover:shadow-lg">
+            Submit Answers
+        </button>
+
+        <div id="results-container" class="hidden mt-8 text-center p-6 bg-slate-50 rounded-lg border border-slate-200">
+            <h3 class="text-2xl font-bold">Quiz Complete!</h3>
+            <p id="score" class="text-4xl font-bold my-4 text-blue-600"></p>
+            <p id="feedback" class="text-lg text-slate-700"></p>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- QUIZ DATA ---
+            // Storing all quiz questions, options, and correct answers for Module 8.
+            const quizData = [
+                {
+                    question: "What is subtext in dialogue?",
+                    options: [
+                        { text: "Words written in italics" },
+                        { text: "The underlying meaning behind the spoken words", correct: true },
+                        { text: "The first line of a conversation" },
+                        { text: "Dialogue that describes the setting" }
+                    ]
+                },
+                {
+                    question: "True or False: Dialogue should be exactly how people speak in real life.",
+                    options: [
+                        { text: "True" },
+                        { text: "False", correct: true }
+                    ]
+                }
+            ];
+
+            // --- DOM Elements ---
+            const quizContent = document.getElementById('quiz-content');
+            const submitBtn = document.getElementById('submit-btn');
+            const resultsContainer = document.getElementById('results-container');
+            const scoreEl = document.getElementById('score');
+            const feedbackEl = document.getElementById('feedback');
+            
+            // --- RENDER THE QUIZ ---
+            function renderQuiz() {
+                let quizHTML = "";
+                quizData.forEach((q, questionIndex) => {
+                    quizHTML += `
+                        <div class="question-block">
+                            <p class="text-lg font-semibold mb-4">${questionIndex + 1}. ${q.question}</p>
+                            <div class="options-container space-y-3" data-question-index="${questionIndex}">
+                                ${renderOptions(q.options, questionIndex)}
+                            </div>
+                        </div>
+                    `;
+                });
+                quizContent.innerHTML = quizHTML;
+            }
+
+            function renderOptions(options, questionIndex) {
+                let optionsHTML = "";
+                options.forEach((option, optionIndex) => {
+                    optionsHTML += `
+                        <button class="option w-full text-left p-4 border-2 border-slate-300 rounded-lg" data-question-index="${questionIndex}" data-option-index="${optionIndex}">
+                            ${option.text}
+                        </button>
+                    `;
+                });
+                return optionsHTML;
+            }
+
+            // --- HANDLE OPTION SELECTION ---
+            quizContent.addEventListener('click', (e) => {
+                if (e.target.classList.contains('option') && !e.target.classList.contains('disabled')) {
+                    const questionIndex = e.target.dataset.questionIndex;
+                    
+                    const allOptionsInGroup = document.querySelectorAll(`.option[data-question-index="${questionIndex}"]`);
+                    allOptionsInGroup.forEach(opt => opt.classList.remove('selected'));
+                    
+                    e.target.classList.add('selected');
+                }
+            });
+
+            // --- HANDLE SUBMISSION ---
+            submitBtn.addEventListener('click', () => {
+                let score = 0;
+                const allOptions = document.querySelectorAll('.option');
+
+                quizData.forEach((q, questionIndex) => {
+                    const selectedOptionEl = document.querySelector(`.option.selected[data-question-index="${questionIndex}"]`);
+                    
+                    if (selectedOptionEl) {
+                        const optionIndex = parseInt(selectedOptionEl.dataset.optionIndex);
+                        if (q.options[optionIndex].correct) {
+                            score++;
+                            selectedOptionEl.classList.add('correct');
+                        } else {
+                            selectedOptionEl.classList.add('incorrect');
+                            const correctIndex = q.options.findIndex(opt => opt.correct);
+                            const correctOptionEl = document.querySelector(`.option[data-question-index="${questionIndex}"][data-option-index="${correctIndex}"]`);
+                            correctOptionEl.classList.add('correct');
+                        }
+                    } else {
+                         const correctIndex = q.options.findIndex(opt => opt.correct);
+                         const correctOptionEl = document.querySelector(`.option[data-question-index="${questionIndex}"][data-option-index="${correctIndex}"]`);
+                         correctOptionEl.classList.add('correct');
+                         correctOptionEl.classList.add('selected');
+                    }
+                });
+
+                allOptions.forEach(opt => opt.classList.add('disabled'));
+
+                scoreEl.textContent = `${score} / ${quizData.length}`;
+                feedbackEl.textContent = getFeedbackMessage(score, quizData.length);
+                resultsContainer.classList.remove('hidden');
+                submitBtn.style.display = 'none';
+
+                resultsContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            });
+
+            function getFeedbackMessage(score, total) {
+                const percentage = (score / total) * 100;
+                if (percentage === 100) return "Perfect score! Your dialogue is sure to be sharp and meaningful.";
+                if (percentage >= 50) return "Nice one! You understand the key principles of great dialogue.";
+                return "Dialogue is an art form. Review the module to make your characters' voices even stronger!";
+            }
+
+            // --- INITIALIZE THE QUIZ ---
+            renderQuiz();
+        });
+    </script>
+
+</body>
+</html>
